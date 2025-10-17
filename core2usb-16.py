@@ -25,12 +25,15 @@ import subprocess
 import win32com.client 
 import win32file
 import win32api
-import tkMessageBox
-import Tkconstants
-import tkFileDialog
 
-from Tkinter import *
-import ttk
+# import messagebox
+# import Tkconstants
+# import tkFileDialog
+# from Tkinter import *
+# import ttk
+
+import tkinter as tk
+from tkinter import messagebox, filedialog, constants, ttk
 
 def ftpcallbackdir(s):
     w = s.split()
@@ -55,7 +58,7 @@ def getlatestversionid():
 
     w = []
 
-    if len(ftplst) <> 0:
+    if len(ftplst) != 0:
         w = ftplst[0].split()[10].split('-')[1].split('.')
 
     if len(w) >= 3:
@@ -81,7 +84,7 @@ def GetListRemovableDrives():
     return lst
 
 def menuexit():
-    if tkMessageBox.askquestion("Exit", "Do you really want to exit?") == "yes":
+    if messagebox.askquestion("Exit", "Do you really want to exit?") == "yes":
         root.destroy()
     
     return
@@ -90,7 +93,7 @@ def menuabout():
     s = "Tiny Core Linux USB installer\n\nv1.6\n\n"
     s += "(c) B. Márkus - September 5, 2012\n\n"
     s += "https://sourceforge.net/projects/core2usb/"
-    tkMessageBox.showinfo("", s)
+    messagebox.showinfo("", s)
     return
 
 def menuchkmd5():
@@ -111,9 +114,9 @@ def menuchkmd5():
     fp.close()
 
     if w5[0] == m.hexdigest():
-        tkMessageBox.showinfo("", "MD5 is OK")
+        messagebox.showinfo("", "MD5 is OK")
     else:
-        tkMessageBox.showerror("", "MD5 check failed, ISO file is corrupted")
+        messagebox.showerror("", "MD5 check failed, ISO file is corrupted")
         
     return
 
@@ -123,10 +126,10 @@ def menutcversion():
     lst = []
     vers = getlatestversionid()
 
-    if vers <> '':
-        tkMessageBox.showinfo("", 'Current TC version is ' + vers)
+    if vers != '':
+        messagebox.showinfo("", 'Current TC version is ' + vers)
     else:
-        tkMessageBox.showerror("", 'Error checking current version')
+        messagebox.showerror("", 'Error checking current version')
         
     return
     
@@ -135,11 +138,11 @@ def callback1():
     global w5
     global fn
     
-    if tmpdir <> '':
+    if tmpdir != '':
         shutil.rmtree(tmpdir)
 
     tmpdir = tempfile.mkdtemp(prefix='core2usb')
-    fn = tkFileDialog.askopenfilename(parent=root, initialdir="\\", filetypes=[('Core image files', '.iso')])
+    fn = filedialog.askopenfilename(parent=root, initialdir="\\", filetypes=[('Core image files', '.iso')])
 
     fn = fn.replace('/', '\\')
     if fn == '':
@@ -151,7 +154,7 @@ def callback1():
         UpdateStatus('', 'black')
         LbISOfile.config(fg='BLACK')
         
-        if r <> 0:
+        if r != 0:
             shutil.rmtree(tmpdir)
             tmpdir = ''
 
@@ -162,10 +165,10 @@ def callback1():
             w5 = ln5.split()
             if len(w5) == 2:
                 if len(w5[0]) == 32:
-                    filemenu.entryconfig(0, state=NORMAL)
+                    filemenu.entryconfig(0, state=tk.NORMAL)
             
         except IOError:
-            filemenu.entryconfig(0, state=DISABLED)
+            filemenu.entryconfig(0, state=tk.DISABLED)
         
     UpdateSetupStatus()
     return
@@ -174,27 +177,27 @@ def callback2():
     global finished
     
     if tmpdir == '':
-        tkMessageBox.showerror("Error", "No source ISO file selected")
+        messagebox.showerror("Error", "No source ISO file selected")
         return
 
     if targetdrive == '':
-        tkMessageBox.showerror("Error", "No target drive selected")
+        messagebox.showerror("Error", "No target drive selected")
         return    
 
     for rt, dirs, files in os.walk(targetdrive):
         break
 
-    if len(files) <> 0 or len(dirs) <> 0:
-        UpdateStatus('Not empty', 'RED')
-        r = tkMessageBox.showerror("Error", "Target drive is not empty")
-        return
+    # if len(files) != 0 or len(dirs) != 0:
+    #     UpdateStatus('Not empty', 'RED')
+    #     r = messagebox.showerror("Error", "Target drive is not empty. CONTINUING WILL DESTROY ALL DATA ON THE DEVICE.")
+    #     return
     
     Button1.config(state='disabled')
     Button2.config(state='disabled')
     
     try:
         os.mkdir(targetdrive + '\\boot')
-    except WindowsError:
+    except OSError:
         os.remove(targetdrive + '\\boot\\syslinux\\ldlinux.sys')
         shutil.rmtree(targetdrive + '\\boot')
 
@@ -209,8 +212,8 @@ def callback2():
 
     try:
         os.mkdir(targetdrive + '\\boot\\syslinux')
-    except WindowsError:
-        tkMessageBox.showerror("Error", "\\boot\\syslinux directory already exists")
+    except OSError:
+        messagebox.showerror("Error", "\\boot\\syslinux directory already exists")
         return
 
     for p in files:
@@ -223,7 +226,7 @@ def callback2():
             fp.write(ln.replace('quiet', 'quiet waitusb=5'))
             fp.close()
             
-        elif p <> 'isolinux.bin':
+        elif p != 'isolinux.bin':
             #print 'boot\\syslinux\\' + p
             mycopy(tmpdir + '\\boot\\isolinux\\' + p, targetdrive + '\\boot\\syslinux\\' + p)
 
@@ -237,20 +240,20 @@ def callback2():
     
     try:
         os.mkdir(targetdrive + '\\tce')
-    except WindowsError:
-        tkMessageBox.showerror("Error", "Error creating \\tce directory")
+    except OSError:
+        messagebox.showerror("Error", "Error creating \\tce directory")
         return
 
     try:
         os.mkdir(targetdrive + '\\tce\\optional')
-    except WindowsError:
-        tkMessageBox.showerror("Error", "Error creating \\cde\\optional directory")
+    except OSError:
+        messagebox.showerror("Error", "Error creating \\cde\\optional directory")
         return
 
     try:
         os.mkdir(targetdrive + '\\tce\\ondemand')
-    except WindowsError:
-        tkMessageBox.showerror("Error", "Error creating \\cde\\ondemand directory")
+    except OSError:
+        messagebox.showerror("Error", "Error creating \\cde\\ondemand directory")
         return
 
     # Copy CDE
@@ -265,7 +268,7 @@ def callback2():
             flg = 1
             break
         
-    if flg <> 0:
+    if flg != 0:
 
         # Copy cde 
 
@@ -297,7 +300,7 @@ def callback2():
             flg = 1
             break
         
-    if flg <> 0:
+    if flg != 0:
 
         # Copy cde 
 
@@ -322,12 +325,12 @@ def callback2():
         for rt, dirs, files in os.walk(tmpdir + '\\tce\\ondemand'):
             break
 
-        print "ONDEMAND:", files
+        print("ONDEMAND:", files)
 
         for p in files:
             #print 'cde\\ondemand\\' + p
             mycopy(tmpdir + '\\tce\\ondemand\\' + p, targetdrive + '\\tce\\ondemand\\' + p)
-            print "---", p
+            print("---", p)
                
     finished = True
     UpdateStatus("Installation succesful on drive %s" % (targetdrive), "black")
@@ -349,10 +352,10 @@ def cbk1(event):
             break
 
         # Is it empty?
-        if len(files) <> 0 or len(dirs) <> 0:
-            vardrive.set('Selected drive is not empty')
+        if len(files) != 0 or len(dirs) != 0:
+            vardrive.set('Selected drive is not empty. CONTINUING WILL DESTROY ALL DATA ON THE DEVICE.')
             LbDrive.config(fg='RED')
-            targetdrive = ''
+            # targetdrive = ''
         else:
             vardrive.set('Selected drive:')
             LbDrive.config(fg='BLACK')
@@ -364,20 +367,20 @@ def mycopy(src, dst):
     try:
         fpin = open(src, 'rb')
     except:
-        tkMessageBox.showerror("Error", "Error opening file")
+        messagebox.showerror("Error", "Error opening file")
         sys.exit(1)
         
     try:
         fpou = open(dst, 'wb')
     except:
-        tkMessageBox.showerror("Error", "Error creating file")
+        messagebox.showerror("Error", "Error creating file")
         sys.exit(1)
         
     tm = os.stat(src).st_mtime
 
     s = dst[:45]
 
-    if s <> dst:
+    if s != dst:
         s += '...'
         
     UpdateStatus('Copying ' + s, 'red')
@@ -386,28 +389,28 @@ def mycopy(src, dst):
         try:
             w = fpin.read()
         except:
-            tkMessageBox.showerror("Error", "Error reading file")
+            messagebox.showerror("Error", "Error reading file")
             sys.exit(1)
 
-        if w == '':
+        if not w:
             break
 
         try:
             fpou.write(w)
         except:
-            tkMessageBox.showerror("Error", "Error writing file")
+            messagebox.showerror("Error", "Error writing file")
             sys.exit(1)
             
     try:
         fpin.close()
     except:
-        tkMessageBox.showerror("Error", "Error closing input file")
+        messagebox.showerror("Error", "Error closing input file")
         sys.exit(1)
         
     try:
         fpou.close()
     except:
-        tkMessageBox.showerror("Error", "Error closing output file file")
+        messagebox.showerror("Error", "Error closing output file file")
         sys.exit(1)
 
 
@@ -423,7 +426,7 @@ def UpdateStatus(msg, color):
 def UpdateSetupStatus():
     Button2.config(state='disabled')
     
-    if targetdrive <> '' and tmpdir <> '':
+    if targetdrive != '' and tmpdir != '':
         s = ('Ready to install', 'black')
         Button2.config(state='active')
 
@@ -462,7 +465,7 @@ def UpdateTargets():
         except:
             s = "%s        ***ERROR***" % (p) 
             
-        Listbox1.insert(END, s)
+        Listbox1.insert(tk.END, s)
 
     return
 
@@ -484,28 +487,28 @@ fn = None
 # Build GUI items
 ##########################################################
 
-root = Tk()
+root = tk.Tk()
 
 root.title("Tiny Core Linux USB installer")
 
 # Build menu
 
-menubar = Menu(root)
+menubar = tk.Menu(root)
 
 style = ttk.Style()
 style.configure("S1", background="white")
 
-filemenu = Menu(menubar, tearoff = 0)
+filemenu = tk.Menu(menubar, tearoff = 0)
 #filemenu.add_command(label = "Open", command = menuopen)
 #filemenu.add_command(label = "Save", command = menusave)
 filemenu.add_command(label = "Check MD5", command = menuchkmd5)
 
-filemenu.entryconfig(0, state=DISABLED)
+filemenu.entryconfig(0, state=tk.DISABLED)
                      
 filemenu.add_command(label = "Exit", command = menuexit)
 menubar.add_cascade(label = "File", menu = filemenu)
 
-helpmenu = Menu(menubar, tearoff = 0)
+helpmenu = tk.Menu(menubar, tearoff = 0)
 helpmenu.add_command(label = "Current TC version", command = menutcversion)
 helpmenu.add_command(label = "About", command = menuabout)
 menubar.add_cascade(label = "Help", menu = helpmenu)
@@ -526,20 +529,20 @@ root.config(menu = menubar)
 #Frame4 = LabelFrame(root, text=' Status ')
 #Frame4.grid(row = 3, column = 0, sticky=W, columnspan=2)
 
-LbHead1 = Label(root, text="Select Tiny Core ISO image file to install")
+LbHead1 = tk.Label(root, text="Select Tiny Core ISO image file to install")
 #LbHead1.grid(row = 0, column = 0, sticky = W, columnspan = 3)
 LbHead1.config(fg='RED')
 
-Button1 = Button(root, text="BROWSE", command=callback1)
-Button1.grid(row = 1, column = 2, sticky = E, padx=4, pady=4, columnspan=2)
+Button1 = tk.Button(root, text="BROWSE", command=callback1)
+Button1.grid(row = 1, column = 2, sticky = tk.E, padx=4, pady=4, columnspan=2)
 
-Button2 = Button(root, text="INSTALL", command=callback2)
-Button2.grid(row = 6, column = 2, sticky = W, padx=4, pady=4)
+Button2 = tk.Button(root, text="INSTALL", command=callback2)
+Button2.grid(row = 6, column = 2, sticky = tk.W, padx=4, pady=4)
 
-variso = StringVar()
+variso = tk.StringVar()
 variso.set('Select Tiny Core ISO image file to install')
-LbISOfile = Label(root, textvariable=variso,  width=50, anchor=W, bg='WHITE')
-LbISOfile.grid(row = 1, column = 0, sticky = W, columnspan = 2)
+LbISOfile = tk.Label(root, textvariable=variso,  width=50, anchor=tk.W, bg='WHITE')
+LbISOfile.grid(row = 1, column = 0, sticky = tk.W, columnspan = 2)
 LbISOfile.config(fg='RED')
 
 # Bottom status line
@@ -548,26 +551,26 @@ lst = []
 
 # Removable media selector list box
 
-vardrive = StringVar()
+vardrive = tk.StringVar()
 vardrive.set('Select target removable drive')
-LbDrive = Label(root, textvariable=vardrive)
-LbDrive.grid(row = 2, column = 0, sticky = W)
+LbDrive = tk.Label(root, textvariable=vardrive)
+LbDrive.grid(row = 2, column = 0, sticky = tk.W)
 LbDrive.config(fg='RED')
 
-varstatus = StringVar()
+varstatus = tk.StringVar()
 varstatus.set('')
-LbStatus = Label(root, textvariable=varstatus)
-LbStatus.grid(row = 6, column = 0, sticky = W, columnspan = 2)
+LbStatus = tk.Label(root, textvariable=varstatus)
+LbStatus.grid(row = 6, column = 0, sticky = tk.W, columnspan = 2)
 
 ###################
-varlbl = StringVar()
+varlbl = tk.StringVar()
 varlbl.set('Hi there')
-lbl = Label(root, textvariable=varlbl)
+lbl = tk.Label(root, textvariable=varlbl)
 #lbl.grid(row = 7, column = 0, sticky = W, columnspan = 2)
 
 #Listbox1 = Listbox(root, height=min(len(lstdrv), 3))
-Listbox1 = Listbox(root, height=5, )
-Listbox1.grid(row = 3, column = 0, sticky = EW, columnspan=2)
+Listbox1 = tk.Listbox(root, height=5, )
+Listbox1.grid(row = 3, column = 0, sticky = tk.EW, columnspan=2)
 
 UpdateTargets()
     
@@ -578,13 +581,13 @@ Listbox1.bind('<Return>', cbk1)
 # Define scrollbar
 
 if len(lstdrv) > 0:
-    scrollbar = Scrollbar(root)
-    scrollbar.grid(row =3, column = 2, sticky = N+S+W)
+    scrollbar = tk.Scrollbar(root)
+    scrollbar.grid(row =3, column = 2, sticky = tk.N+tk.S+tk.W)
     scrollbar.config( command = myscrset )
 
 # Check button
 
-ModeVar1 = IntVar()
+ModeVar1 = tk.IntVar()
 ModeVar1.set(1)
 #ChkBtn1 = Checkbutton(root, text = "Create TCE directory ", variable = ModeVar1)
 #ChkBtn1.grid(row = 5, column = 0, sticky = W, padx = 2, pady = 2, columnspan=3)
@@ -598,6 +601,6 @@ root.mainloop()
 
 # Cleanup
 
-if tmpdir <> '':
+if tmpdir != '':
     shutil.rmtree(tmpdir)
 
